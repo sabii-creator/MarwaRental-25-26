@@ -58,64 +58,13 @@ const buildingsData = {
             { id: 15, customerId: 15, customerName: 'Amanda Walker', room: '203', month: 'December 2025', amount: 10500, dueDate: '2025-12-05', paidDate: null, status: 'pending' }
         ]
     }
-};
-
-// ========================================
-// INITIALIZATION
-// ========================================
-
-document.addEventListener('DOMContentLoaded', async () => {
-    // Initialize Firebase
-    const firebaseEnabled = initializeFirebase();
-
-    // Load data from cloud or localStorage
-    await loadDataFromStorage();
-
-    initializeApp();
-    updateDashboardStats();
-    setupScrollAnimation();
-
-    // Set up real-time sync if Firebase is enabled
-    if (firebaseEnabled && database) {
-        db.onDataChange((data) => {
-            Object.assign(buildingsData, data);
-            initializeApp();
-            updateDashboardStats();
-        });
-    }
-});
-
-async function loadDataFromStorage() {
-    try {
-        const savedData = await db.loadData();
-        if (savedData) {
-            // Merge saved data with default data
-            Object.keys(savedData).forEach(buildingId => {
-                if (buildingsData[buildingId]) {
-                    buildingsData[buildingId] = savedData[buildingId];
-                }
-            });
-            console.log('Data loaded from storage');
-        }
-    } catch (error) {
-        console.error('Error loading data:', error);
-    }
-}
-
-function saveData() {
-    scheduleAutoSave(buildingsData);
-}
-
-function initializeApp() {
-    // Update building statistics
-    Object.keys(buildingsData).forEach(buildingId => {
         const building = buildingsData[buildingId];
-        const roomsElement = document.getElementById(`${buildingId}-rooms`);
-        const occupiedElement = document.getElementById(`${buildingId}-occupied`);
+    const roomsElement = document.getElementById(`${buildingId}-rooms`);
+    const occupiedElement = document.getElementById(`${buildingId}-occupied`);
 
-        if (roomsElement) roomsElement.textContent = building.rooms;
-        if (occupiedElement) occupiedElement.textContent = building.customers.length;
-    });
+    if(roomsElement) roomsElement.textContent = building.rooms;
+    if(occupiedElement) occupiedElement.textContent = building.customers.length;
+});
 }
 
 function updateDashboardStats() {
