@@ -140,6 +140,8 @@ function navigateTo(page, buildingId) {
         showCustomersPage(buildingId);
     } else if (page === 'rooms') {
         showRoomsPage(buildingId);
+    } else if (page === 'proofs') {
+        showProofsPage(buildingId);
     }
 }
 
@@ -466,6 +468,11 @@ function showAddCustomerModal(buildingId) {
                     <div class="form-group">
                         <label class="form-label">Join Date</label>
                         <input type="date" class="form-input" id="customer-join-date" required>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label class="form-label">ID Proof (Aadhar, Passport, etc.)</label>
+                        <input type="file" class="form-input" id="customer-id-proof" accept="image/*,.pdf" onchange="handleFileUpload(this)">
+                        <small style="color: #94a3b8; font-size: 0.875rem;">Upload image or PDF (Max 5MB)</small>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width:100%;margin-top:1rem">Add Customer</button>
