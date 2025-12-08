@@ -133,6 +133,14 @@ function setupScrollAnimation() {
     });
 }
 
+function navigateTo(page, buildingId) {
+    if (page === 'billing') {
+        showBillingPage(buildingId);
+    } else if (page === 'customers') {
+        showCustomersPage(buildingId);
+    }
+}
+
 function goBack() {
     document.getElementById('dynamic-content').innerHTML = '';
     document.getElementById('buildings').scrollIntoView({ behavior: 'smooth' });
