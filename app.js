@@ -138,6 +138,8 @@ function navigateTo(page, buildingId) {
         showBillingPage(buildingId);
     } else if (page === 'customers') {
         showCustomersPage(buildingId);
+    } else if (page === 'rooms') {
+        showRoomsPage(buildingId);
     }
 }
 
@@ -627,6 +629,283 @@ function generateBuildingStatement() {
 function generateAllStatement() {
     alert('All buildings statement generation - Feature coming soon!');
 }
+
+// ========================================
+// ROOMS MANAGEMENT
+// ========================================
+
+function showRoomsPage(buildingId) {
+    const building = buildingsData[buildingId];
+
+    // Initialize rooms array if it doesn't exist
+    if (!building.roomsList) {
+        building.roomsList = [];
+        // Generate default rooms based on rooms count
+        for (let i = 1; i <= building.rooms; i++) {
+            const roomNumber = i < 10 ? `10${i}` : `${100 + i}`;
+            const isOccupied = building.customers.some(c => c.room === roomNumber);
+            building.roomsList.push({
+                id: i,
+                number: roomNumber,
+                floor: Math.ceil(i / 6),
+                type: i <= 6 ? 'Standard' : 'Deluxe',
+                status: isOccupied ? 'occupied' : 'vacant',
+                rent: i <= 6 ? 8000 : 9000
+            });
+        }
+    }
+
+    const content = document.getElementById('dynamic-content');
+
+    content.innerHTML = `
+        <div class="page-container">
+            <div class="container">
+                <div class="page-header">
+                    <h1 class="page-title">
+                        <button class="back-button" onclick="goBack()">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19 12H5" stroke="currentColor" stroke-width="2"/>
+                                <path d="M12 19L5 12L12 5" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </button>
+                        <span>Rooms - ${building.name}</span>
+                    </h1>
+                    <p class="page-subtitle">Manage room information and availability</p>
+                </div>
+                
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3 class="table-title">Room Directory</h3>
+                        <div class="table-actions">
+                            <div class="search-box">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                                    <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2"/>
+                                </svg>
+                                <input type="text" placeholder="Search rooms..." id="room-search" onkeyup="filterRooms('${buildingId}')">
+                            </div>
+                            <button class="btn btn-primary" onclick="showAddRoomModal('${buildingId}')">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2"/>
+                                    <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2"/>
+                                </svg>
+                                Add Room
+                            </button>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Room Number</th>
+                                <th>Floor</th>
+                                <th>Type</th>
+                                <th>Rent (₹)</th>
+                                <th>Status</th>
+                                <th>Tenant</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rooms-tbody">
+                            ${renderRooms(building.roomsList, building.customers, buildingId)}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+
+    content.scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderRooms(rooms, customers, buildingId) {
+    return rooms.map(room => {
+        const tenant = customers.find(c => c.room === room.number);
+        return `
+            <tr>
+                <td><strong>${room.number}</strong></td>
+                <td>Floor ${room.floor}</td>
+                <td>${room.type}</td>
+                <td>₹${room.rent.toLocaleString()}</td>
+                <td><span class="status-badge status-${room.status}">${room.status}</span></td>
+                <td>${tenant ? tenant.name : '-'}</td>
+                <td>
+                    <button class="btn btn-secondary" style="padding:6px 12px;font-size:0.875rem;margin-right:0.5rem" onclick="editRoom(${room.id}, '${buildingId}')">Edit</button>
+                    <button class="btn btn-danger" style="padding:6px 12px;font-size:0.875rem" onclick="deleteRoom(${room.id}, '${buildingId}')">Delete</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function filterRooms(buildingId) {
+    const search = document.getElementById('room-search').value.toLowerCase();
+    const building = buildingsData[buildingId];
+    const filtered = building.roomsList.filter(r =>
+        r.number.toLowerCase().includes(search) ||
+        r.type.toLowerCase().includes(search) ||
+        r.status.toLowerCase().includes(search)
+    );
+    document.getElementById('rooms-tbody').innerHTML = renderRooms(filtered, building.customers, buildingId);
+}
+
+function showAddRoomModal(buildingId) {
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add New Room</h2>
+                <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+            </div>
+            <form onsubmit="addRoom(event, '${buildingId}')">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Room Number</label>
+                        <input type="text" class="form-input" id="room-number" placeholder="e.g., 101" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Floor</label>
+                        <input type="number" class="form-input" id="room-floor" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Room Type</label>
+                        <select class="form-select" id="room-type" required>
+                            <option value="">Select Type</option>
+                            <option value="Standard">Standard</option>
+                            <option value="Deluxe">Deluxe</option>
+                            <option value="Suite">Suite</option>
+                            <option value="Premium">Premium</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Monthly Rent (₹)</label>
+                        <input type="number" class="form-input" id="room-rent" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="room-status" required>
+                            <option value="vacant">Vacant</option>
+                            <option value="occupied">Occupied</option>
+                            <option value="maintenance">Maintenance</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;margin-top:1rem">Add Room</button>
+            </form>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function addRoom(e, buildingId) {
+    e.preventDefault();
+    const building = buildingsData[buildingId];
+
+    if (!building.roomsList) {
+        building.roomsList = [];
+    }
+
+    const maxId = building.roomsList.length > 0 ? Math.max(...building.roomsList.map(r => r.id)) : 0;
+
+    const newRoom = {
+        id: maxId + 1,
+        number: document.getElementById('room-number').value,
+        floor: parseInt(document.getElementById('room-floor').value),
+        type: document.getElementById('room-type').value,
+        rent: parseInt(document.getElementById('room-rent').value),
+        status: document.getElementById('room-status').value
+    };
+
+    building.roomsList.push(newRoom);
+    building.rooms = building.roomsList.length;
+    saveToLocalStorage();
+    e.target.closest('.modal').remove();
+    showRoomsPage(buildingId);
+    initializeApp();
+}
+
+function editRoom(roomId, buildingId) {
+    const building = buildingsData[buildingId];
+    const room = building.roomsList.find(r => r.id === roomId);
+
+    if (!room) return;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Edit Room</h2>
+                <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+            </div>
+            <form onsubmit="updateRoom(event, ${roomId}, '${buildingId}')">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Room Number</label>
+                        <input type="text" class="form-input" id="edit-room-number" value="${room.number}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Floor</label>
+                        <input type="number" class="form-input" id="edit-room-floor" value="${room.floor}" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Room Type</label>
+                        <select class="form-select" id="edit-room-type" required>
+                            <option value="Standard" ${room.type === 'Standard' ? 'selected' : ''}>Standard</option>
+                            <option value="Deluxe" ${room.type === 'Deluxe' ? 'selected' : ''}>Deluxe</option>
+                            <option value="Suite" ${room.type === 'Suite' ? 'selected' : ''}>Suite</option>
+                            <option value="Premium" ${room.type === 'Premium' ? 'selected' : ''}>Premium</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Monthly Rent (₹)</label>
+                        <input type="number" class="form-input" id="edit-room-rent" value="${room.rent}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="edit-room-status" required>
+                            <option value="vacant" ${room.status === 'vacant' ? 'selected' : ''}>Vacant</option>
+                            <option value="occupied" ${room.status === 'occupied' ? 'selected' : ''}>Occupied</option>
+                            <option value="maintenance" ${room.status === 'maintenance' ? 'selected' : ''}>Maintenance</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;margin-top:1rem">Update Room</button>
+            </form>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function updateRoom(e, roomId, buildingId) {
+    e.preventDefault();
+    const building = buildingsData[buildingId];
+    const room = building.roomsList.find(r => r.id === roomId);
+
+    if (room) {
+        room.number = document.getElementById('edit-room-number').value;
+        room.floor = parseInt(document.getElementById('edit-room-floor').value);
+        room.type = document.getElementById('edit-room-type').value;
+        room.rent = parseInt(document.getElementById('edit-room-rent').value);
+        room.status = document.getElementById('edit-room-status').value;
+
+        saveToLocalStorage();
+        e.target.closest('.modal').remove();
+        showRoomsPage(buildingId);
+    }
+}
+
+function deleteRoom(roomId, buildingId) {
+    if (confirm('Delete this room?')) {
+        const building = buildingsData[buildingId];
+        building.roomsList = building.roomsList.filter(r => r.id !== roomId);
+        building.rooms = building.roomsList.length;
+        saveToLocalStorage();
+        showRoomsPage(buildingId);
+        initializeApp();
+    }
+}
+
 
 // Close modals on background click
 document.addEventListener('click', (e) => {
