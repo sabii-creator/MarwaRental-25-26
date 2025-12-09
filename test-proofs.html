@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ID Proof Feature</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+        .test-section {
+            background: #334155;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        h1 { color: #60a5fa; }
+        h2 { color: #93c5fd; margin-top: 0; }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #2563eb; }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #94a3b8; }
+        pre {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1e293b;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 ID Proof Feature Test</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Check if ID Proofs are Saved</h2>
+        <p class="info">This will check if any customers have ID proofs in localStorage</p>
+        <button onclick="checkIdProofs()">Check ID Proofs</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 2: Clear All Data (Optional)</h2>
+        <p class="info">Use this to start fresh if needed</p>
+        <button onclick="clearAllData()">Clear All Data</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 3: Test Instructions</h2>
+        <ol>
+            <li>Open <code>index.html</code> in another tab</li>
+            <li>Go to any building's "Customers" page</li>
+            <li>Click "Add Customer"</li>
+            <li>Fill in all details</li>
+            <li><strong>Upload an ID proof</strong> (image or PDF)</li>
+            <li>Submit the form</li>
+            <li>Come back to this page and click "Check ID Proofs"</li>
+            <li>Then go to "Proofs" page in the main app</li>
+        </ol>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        function checkIdProofs() {
+            const results = document.getElementById('results');
+            const data = localStorage.getItem('rentalData');
+            
+            if (!data) {
+                results.innerHTML = '<p class="error">❌ No data found in localStorage</p>';
+                return;
+            }
+
+            try {
+                const rentalData = JSON.parse(data);
+                let html = '<h3 class="success">✅ Data Found!</h3>';
+                let totalCustomers = 0;
+                let customersWithProofs = 0;
+
+                Object.keys(rentalData).forEach(buildingId => {
+                    const building = rentalData[buildingId];
+                    html += `<h4>${building.name}</h4>`;
+                    html += `<p>Total Customers: ${building.customers.length}</p>`;
+                    
+                    building.customers.forEach(customer => {
+                        totalCustomers++;
+                        if (customer.idProof) {
+                            customersWithProofs++;
+                            html += `<div style="background: #064e3b; padding: 10px; margin: 10px 0; border-radius: 6px;">`;
+                            html += `<p class="success">✅ ${customer.name} (Room ${customer.room})</p>`;
+                            html += `<p class="info">ID Proof: ${customer.idProof.name}</p>`;
+                            html += `<p class="info">Size: ${(customer.idProof.size / 1024).toFixed(2)} KB</p>`;
+                            html += `<p class="info">Type: ${customer.idProof.type}</p>`;
+                            html += `</div>`;
+                        } else {
+                            html += `<p class="error">❌ ${customer.name} (Room ${customer.room}) - No ID proof</p>`;
+                        }
+                    });
+                });
+
+                html += `<hr>`;
+                html += `<h3>Summary:</h3>`;
+                html += `<p>Total Customers: ${totalCustomers}</p>`;
+                html += `<p class="success">Customers with ID Proofs: ${customersWithProofs}</p>`;
+                html += `<p class="error">Customers without ID Proofs: ${totalCustomers - customersWithProofs}</p>`;
+
+                if (customersWithProofs > 0) {
+                    html += `<p class="success"><strong>✅ ID Proofs are being saved correctly!</strong></p>`;
+                    html += `<p class="info">Now check the "Proofs" page in the main app - customers should appear there.</p>`;
+                } else {
+                    html += `<p class="error"><strong>❌ No ID proofs found!</strong></p>`;
+                    html += `<p class="info">Make sure to:</p>`;
+                    html += `<ol>`;
+                    html += `<li>Upload a file when adding a customer</li>`;
+                    html += `<li>Check that app.js has been updated with the fix</li>`;
+                    html += `<li>Refresh the browser after updating app.js</li>`;
+                    html += `</ol>`;
+                }
+
+                results.innerHTML = html;
+
+            } catch (e) {
+                results.innerHTML = `<p class="error">❌ Error parsing data: ${e.message}</p>`;
+            }
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear all data? This cannot be undone!')) {
+                localStorage.removeItem('rentalData');
+                document.getElementById('results').innerHTML = '<p class="success">✅ All data cleared! Refresh the main app to start fresh.</p>';
+            }
+        }
+
+        // Auto-check on load
+        window.addEventListener('load', () => {
+            setTimeout(checkIdProofs, 500);
+        });
+    </script>
+</body>
+</html>

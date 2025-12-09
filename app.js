@@ -1,4 +1,4 @@
-// ========================================
+﻿// ========================================
 // MARWA RENTAL MANAGEMENT SYSTEM 2025-26
 // Fixed and Working Version
 // ========================================
@@ -484,6 +484,13 @@ function showAddCustomerModal(buildingId) {
 
 function addCustomer(e, buildingId) {
     e.preventDefault();
+
+    // Check if file is still uploading
+    if (window.isUploading) {
+        alert('Please wait for the ID proof to finish processing...');
+        return;
+    }
+
     const building = buildingsData[buildingId];
     const allCustomers = Object.values(buildingsData).flatMap(b => b.customers);
     const maxId = Math.max(...allCustomers.map(c => c.id), 0);
@@ -496,10 +503,12 @@ function addCustomer(e, buildingId) {
         email: document.getElementById('customer-email').value,
         rent: parseInt(document.getElementById('customer-rent').value),
         joinDate: document.getElementById('customer-join-date').value,
-        status: 'active'
+        status: 'active',
+        idProof: window.uploadedFileData || null
     };
 
     building.customers.push(newCustomer);
+    window.uploadedFileData = null;
     saveToLocalStorage();
     e.target.closest('.modal').remove();
     showCustomersPage(buildingId);

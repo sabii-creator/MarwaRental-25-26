@@ -4,11 +4,17 @@
 
 // Temporary storage for uploaded file
 window.uploadedFileData = null;
+window.isUploading = false; // Track upload status
 
 function handleFileUpload(input) {
     const file = input.files[0];
+    const parent = input.parentNode;
+    const existingStatus = parent.querySelector('.upload-status');
+    if (existingStatus) existingStatus.remove();
+
     if (!file) {
         window.uploadedFileData = null;
+        window.isUploading = false;
         return;
     }
 
@@ -17,8 +23,20 @@ function handleFileUpload(input) {
         alert('File size must be less than 5MB');
         input.value = '';
         window.uploadedFileData = null;
+        window.isUploading = false;
         return;
     }
+
+    window.isUploading = true;
+
+    // Show processing message
+    const processingStatus = document.createElement('div');
+    processingStatus.className = 'upload-status';
+    processingStatus.style.color = '#fbbf24'; // Warning yellow
+    processingStatus.style.fontSize = '0.875rem';
+    processingStatus.style.marginTop = '0.25rem';
+    processingStatus.textContent = '⏳ Processing file...';
+    parent.appendChild(processingStatus);
 
     // Read file as base64
     const reader = new FileReader();
@@ -30,6 +48,21 @@ function handleFileUpload(input) {
             data: e.target.result,
             uploadDate: new Date().toISOString()
         };
+        window.isUploading = false;
+
+        // Update status to success
+        if (processingStatus && processingStatus.parentNode) {
+            processingStatus.style.color = '#4ade80'; // Success green
+            processingStatus.textContent = '✅ File ready to save';
+        }
+    };
+    reader.onerror = function () {
+        window.isUploading = false;
+        if (processingStatus && processingStatus.parentNode) {
+            processingStatus.style.color = '#ef4444'; // Error red
+            processingStatus.textContent = '❌ Error reading file';
+        }
+        alert('Error reading file');
     };
     reader.readAsDataURL(file);
 }
