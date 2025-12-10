@@ -924,8 +924,19 @@ td {
         grid-template-columns: 1fr;
     }
 
+    .nav-container {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-sm);
+    }
+
     .nav-links {
-        display: none;
+        display: flex;
+        width: 100%;
+        justify-content: center;
+        gap: var(--spacing-sm);
+        flex-wrap: wrap;
+        margin-top: var(--spacing-xs);
     }
 
     .table-header {
