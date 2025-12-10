@@ -1040,3 +1040,87 @@ document.addEventListener('click', (e) => {
 });
 
 console.log('✅ Marwa Rental Management System loaded successfully!');
+
+// ========================================
+// MISSING FUNCTION FIXES
+// ========================================
+
+function deleteBill(billId, buildingId) {
+    if (confirm('Delete this bill record?')) {
+        const building = buildingsData[buildingId];
+        building.bills = building.bills.filter(b => b.id !== billId);
+        saveToLocalStorage();
+        showBillingPage(buildingId);
+    }
+}
+
+function updateRoom(e, roomId, buildingId) {
+    e.preventDefault();
+    const building = buildingsData[buildingId];
+    const room = building.roomsList.find(r => r.id === roomId);
+    if (room) {
+        room.number = document.getElementById('edit-room-number').value;
+        room.floor = parseInt(document.getElementById('edit-room-floor').value);
+        room.type = document.getElementById('edit-room-type').value;
+        room.rent = parseInt(document.getElementById('edit-room-rent').value);
+        room.status = document.getElementById('edit-room-status').value;
+
+        saveToLocalStorage();
+        e.target.closest('.modal').remove();
+        showRoomsPage(buildingId);
+    }
+}
+
+function editBill(billId, buildingId) {
+    const building = buildingsData[buildingId];
+    const bill = building.bills.find(b => b.id === billId);
+    if (!bill) return;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Edit Bill</h2>
+                <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+            </div>
+            <form onsubmit="updateBill(event, ${billId}, '${buildingId}')">
+                <div class="form-grid">
+                     <div class="form-group">
+                        <label class="form-label">Amount</label>
+                        <input type="number" class="form-input" id="edit-bill-amount" value="${bill.amount}" required>
+                    </div>
+                     <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="edit-bill-status" required>
+                             <option value="pending" ${bill.status === 'pending' ? 'selected' : ''}>Pending</option>
+                             <option value="paid" ${bill.status === 'paid' ? 'selected' : ''}>Paid</option>
+                             <option value="overdue" ${bill.status === 'overdue' ? 'selected' : ''}>Overdue</option>
+                        </select>
+                    </div>
+                     <div class="form-group">
+                        <label class="form-label">Paid Date</label>
+                        <input type="date" class="form-input" id="edit-bill-paid-date" value="${bill.paidDate || ''}">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;margin-top:1rem">Save Changes</button>
+            </form>
+        </div>
+     `;
+    document.body.appendChild(modal);
+}
+
+function updateBill(e, billId, buildingId) {
+    e.preventDefault();
+    const building = buildingsData[buildingId];
+    const bill = building.bills.find(b => b.id === billId);
+    if (bill) {
+        bill.amount = parseInt(document.getElementById('edit-bill-amount').value);
+        bill.status = document.getElementById('edit-bill-status').value;
+        bill.paidDate = document.getElementById('edit-bill-paid-date').value || null;
+
+        saveToLocalStorage();
+        e.target.closest('.modal').remove();
+        showBillingPage(buildingId);
+    }
+}

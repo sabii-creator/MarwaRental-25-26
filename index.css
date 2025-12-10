@@ -934,9 +934,17 @@ td {
         display: flex;
         width: 100%;
         justify-content: center;
-        gap: var(--spacing-sm);
+        gap: var(--spacing-xs);
         flex-wrap: wrap;
-        margin-top: var(--spacing-xs);
+        margin-top: var(--spacing-sm);
+    }
+
+    .nav-link {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.75rem;
+        background: rgba(255, 255, 255, 0.05);
+        /* Make them look like buttons */
+        border-radius: 20px;
     }
 
     .table-header {
