@@ -81,11 +81,31 @@ function loadFromLocalStorage() {
     } catch (e) {
         console.error('Error loading data:', e);
     }
+
+    // Cloud Sync Integration
+    if (typeof CloudSync !== 'undefined') {
+        const active = CloudSync.init();
+        if (active) {
+            CloudSync.subscribe((data) => {
+                if (data) {
+                    Object.assign(buildingsData, data);
+                    initializeApp();
+                    updateDashboardStats();
+                    // Also update local storage to match cloud
+                    localStorage.setItem('rentalData', JSON.stringify(buildingsData));
+                }
+            });
+        }
+    }
 }
 
 function saveToLocalStorage() {
     try {
         localStorage.setItem('rentalData', JSON.stringify(buildingsData));
+        // Cloud Sync Hook
+        if (typeof CloudSync !== 'undefined') {
+            CloudSync.save(buildingsData);
+        }
     } catch (e) {
         console.error('Error saving data:', e);
     }
