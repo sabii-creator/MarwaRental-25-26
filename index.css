@@ -672,7 +672,7 @@ body {
     backdrop-filter: blur(10px);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-xl);
-    overflow: hidden;
+    overflow-x: auto; /* Enable horizontal scrolling */
 }
 
 .table-header {
